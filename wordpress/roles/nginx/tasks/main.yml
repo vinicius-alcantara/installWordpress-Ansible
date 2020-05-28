@@ -1,0 +1,56 @@
+---
+ 
+ - name: Copiando o repositório oficial do nginx para o servidor
+   copy:
+     src: nginx.repo
+     dest: /etc/yum.repos.d/nginx.repo
+     owner: root
+     group: root
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHad"
+
+ - name: Update Repos
+   yum:
+     name: "*"
+     state: latest
+     update_cache: yes
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHad"
+
+ - name: Instalação dos Pacotes Nginx
+   yum: 
+     name: ['nginx.x86_64', 'nginx-module-geoip.x86_64']
+     state: latest
+   notify: Start Nginx
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHad"
+
+ - name: Backup /etc/nginx Default
+   command: mv /etc/nginx /etc/nginx-default
+   args:
+     warn: false
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHad"
+
+ - name: Copiando diretório /etc/nginx para o servidor
+   unarchive:
+     src: nginx.tar.gz
+     dest: /etc/
+     owner: root
+     group: root
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHad"
+
+ - name: Adicionando o template vhost wordpress.conf ao servidor
+   template:
+     src: wordpress.conf
+     dest: /etc/nginx/vhosts.d/wordpress.conf
+     owner: root
+     group: root
+     mode: 0744
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHad"
+
+ - name: Criando diretório do nginx
+   file: path={{ item }} state=directory mode=0755 owner=nginx group=nginx recurse=yes
+   with_items:
+     - /var/www
+     - /var/www/html
+   notify: Restart Nginx
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHad"
+
+...

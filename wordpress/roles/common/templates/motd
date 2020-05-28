@@ -1,0 +1,6 @@
+#######################################
+    IDENTIFIQUE-SE, ACESSO RESTRITO
+#######################################
+SERVER: "{{ ansible_fqdn }}"
+IP: "{{ ansible_all_ipv4_addresses }}"
+#######################################

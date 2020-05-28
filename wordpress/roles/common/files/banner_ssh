@@ -1,0 +1,8 @@
+##############################################
+    IDENTIFIQUE-SE, ACESSO REMOTO RESTRITO
+##############################################
+SYSTEM: "{{ ansible_distribution }}" 
+SERVER: "{{ ansible_fqdn }}"
+IP: "{{ ansible_all_ipv4_addresses }}"
+##############################################
+

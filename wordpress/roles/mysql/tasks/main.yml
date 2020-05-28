@@ -1,0 +1,77 @@
+---
+
+ # Install Mariadb
+ - name: Install Mariadb
+   apt:
+     name={{ packages_mariadb }}
+     state=latest
+     update_cache=yes
+     install_recommends=yes
+   vars:
+     packages_mariadb:
+       - mariadb-client
+       - mariadb-server
+       - python-mysqldb
+   when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+ - name: Definindo uma nova Senha de root
+   mysql_user: 
+     check_implicit_admin=yes
+     login_user=root
+     login_password=""
+     user=root
+     password=123
+     host={{ item }}
+     priv='*.*:ALL,GRANT'
+   with_items:
+     - 127.0.0.1
+     - localhost
+   notify: Restart Mariadb
+   when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+ - name: Removendo Usuário Anônimo
+   mysql_user:
+     check_implicit_admin=yes
+     login_user=root
+     login_password=123
+     user=""
+     state=absent
+   when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+ - name: Removendo a Base test
+   mysql_db:
+     login_user=root
+     login_password=123
+     name=test
+     state=absent
+   when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+ - name: Criação da Base de Dados do Wordpress
+   mysql_db:
+     name="wordpress"
+     state=present
+     login_user="root"
+     login_password=123
+     login_host=localhost
+   when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+ - name: Criação do Usuário Wordpress e Acesso
+   mysql_user:
+     name="wordpress"
+     password="wordpress"
+     priv="wordpress.*:ALL"
+     host="192.168.0.%"
+     login_user="root"
+     login_password=123
+     login_host=localhost
+   when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+ - name: Liberando Acesso Remoto ao Mariadb
+   replace:
+     path=/etc/mysql/my.cnf
+     regexp="127.0.0.1"
+     replace="192.168.0.102"
+   notify: Restart Mariadb
+   when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+...

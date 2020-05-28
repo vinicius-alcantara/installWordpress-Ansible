@@ -1,0 +1,109 @@
+---
+ #### Configurações Gerais ####
+ - name: Alteração do /etc/profile
+   lineinfile: dest=/etc/profile line={{ item }}
+   with_items:
+     - "#### Variáveis e Alias Personalizados ####"
+     - "export HISTTIMEFORMAT='%d/%m/%Y - %H:%M:%S - '"
+     - "export HISTSIZE='5000'"
+     - "export HISTFILESIZE='5000'"
+     - "alias ls='ls -lh --color'"
+     - "alias vi='vim'"
+     - "alias grep='grep -i --color'"
+     - "alias rm='rm -i'"
+
+ - name: Desabilitando o SELINUX Permanentemente
+   replace:
+     dest: /etc/selinux/config
+     regexp: "SELINUX='enforcing'"
+     replace: "SELINUX='disabled'"
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Desabilitando o SELINUX Temporariamente
+   shell: setenforce 0
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ #### Gerenciamento de Pacotes e Atualização do Sitema Operacional ####
+ - name: Instalação do repositório epel-release
+   yum:
+     name: epel-release
+     state: latest
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Atualização do Sistema Operacional
+   yum: name=* state=latest update_cache=yes
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Instalação de Pacotes Redhat/CentOS
+   yum: name={{ common_packages_RedHat }} state=latest
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Remoção de Pacotes Desnecessários
+   yum:
+     name: ["postfix", "NetworkManager", "NetworkManager-libnm", "firewalld"]
+     state: absent
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Atualização do Repositório e Pacotes Já instalados
+   apt:
+     name: "*"
+     update_cache: yes
+     upgrade: yes
+   when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+   #- name: Atualização da Distribuição
+   #apt:
+   #  upgrade: dist
+   #when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+ - name: Instalação de Pacotes
+   apt: name={{ common_packages_Debian }} state=latest update_cache=yes
+   when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+ #### Gerenciamento de Usuários ####
+ - name: Criando o Usuário Treinamento
+   user:
+     name: treinamento
+     comment: "Treinamento Ansible"
+     shell: /bin/bash
+     home: /home/treinamento
+     password: 12a183f6b24c4e06fe89465bbd2767e3
+
+ #### Configurando Timezone ####   
+ - name: Connfigurando o Timezone
+   file:
+     src: /usr/share/zoneinfo/America/Sao_Paulo
+     dest: /etc/localtime
+     state: link
+     force: yes
+     owner: root
+     group: root
+
+ #### Configurações de SSH ####
+ - name: Configurando o sshd_config
+   lineinfile:
+     dest=/etc/ssh/sshd_config
+     state=present
+     regexp={{ item.regexp }}
+     line={{ item.line }}
+   with_items:
+     - { regexp: "#Port 22", line: "Port 22" }
+     - { regexp: "Banner none", line: "Banner /etc/ssh/banner_ssh" }
+     - { regexp: "#X11Forwarding yes", line: "X11Forwarding no" }
+   
+ - name: Definindo Protocolo Versão 2 do SSH
+   lineinfile:
+     dest: /etc/ssh/sshd_config
+     line: "Protocol 2"
+ 
+ - name: Adicionando o Banner Motd
+   template:
+     src: motd
+     dest: /etc/motd
+     force: yes
+     owner: root
+     group: root
+     mode: 0775
+   notify: Restart SSH
+   
+...

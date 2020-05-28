@@ -1,0 +1,15 @@
+---
+
+ - name: Start php-fpm
+   systemd:
+     name: php72-php-fpm
+     state: started
+     enabled: yes
+
+ - name: Restart php-fpm
+   systemd:
+     name: php72-php-fpm
+     state: restarted
+     daemon_reload: yes
+
+...

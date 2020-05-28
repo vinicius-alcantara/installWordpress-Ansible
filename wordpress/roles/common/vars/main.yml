@@ -1,0 +1,20 @@
+---
+
+ common_packages_RedHat:
+   - vim
+   - net-tools
+   - nmap
+   - tcpdump
+   - unzip 
+
+ common_packages_Debian:
+   - build-essential 
+   - vim
+   - net-tools
+   - wget
+   - curl
+   - python-dev
+   - libmysqlclient-dev
+   - unzip
+
+...

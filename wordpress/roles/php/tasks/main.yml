@@ -1,0 +1,71 @@
+---
+
+ # Gerenciamento de Pacotes
+ - name: Adicionando repositório do PHP 7.2
+   yum:
+     name: "{{ item }}"
+     state: latest
+   with_items:
+     - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+     - http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+     - yum-utils
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Atualizando Repo
+   yum:
+     name: "*"
+     state: latest
+     update_cache: yes
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Instalação dos pacotesPHP
+   yum:
+     name: "{{ php_packages }}"
+     state: latest 
+   notify: Start php-fpm
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ # Configurações    
+ - name: Criando cópia de segurança do /etc/php.ini
+   command: cp /etc/opt/remi/php72/php.ini /etc/opt/remi/php72/php.ini.default
+   args:
+     warn: false
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Criando cópia de segurança do /etc/php-fpm.d/www.conf
+   command: mv /etc/opt/remi/php72/php-fpm.d/www.conf /etc/opt/remi/php72/php-fpm.d/www.conf.default
+   args:
+     warn: false
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Configurando o Timezone do php.ini
+   lineinfile:
+     dest: /etc/opt/remi/php72/php.ini
+     state: present
+     regexp: ";date.timezone =" 
+     line: "date.timezone = America/Sao_Paulo"
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Copiando arquivo www.conf para o servidor
+   copy:
+     src: www.conf
+     dest: /etc/opt/remi/php72/php-fpm.d/www.conf
+     owner: root
+     group: root
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+ - name: Criação de diretório utilizados pelo PHP-FPM
+   file:
+     path: "{{ item }}"
+     state: directory
+     mode: 0775
+     owner: nginx
+     group: nginx
+   with_items:
+     - /var/lib/php/session
+     - /var/lib/php/wsdlcache
+     - /var/run/php-fpm
+   notify: Restart php-fpm 
+   when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+...

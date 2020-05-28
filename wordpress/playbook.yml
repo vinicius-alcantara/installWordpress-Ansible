@@ -1,0 +1,11 @@
+---
+ 
+ - name: Playbook Final - Treinamento Ansible
+   hosts: all
+   roles:
+           # - common
+     - mysql
+           #- nginx
+           #- php
+           #- wordpress
+...
